@@ -1,14 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const item = require('../models/Item.js');
+const itemController = require('../controllers/ItemController.js');
 
-router.get('/', async (req, res, next) => {
-    try {
-        const items = await item.find();
-        res.json(items);
-    } catch (err) {
-        next(err);
-    }
-});
+router.get('/items', itemController.getItems);
 
 module.exports = router;

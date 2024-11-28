@@ -1,15 +1,15 @@
-import { format, isValid } from 'date-fns';
+import { format, isValid } from "date-fns";
 
 const formatDate = (date, formatString) => {
     const parsedDate = new Date(date);
-    return isValid(parsedDate) ? format(parsedDate, formatString) : 'N/A';
+    return isValid(parsedDate) ? format(parsedDate, formatString) : "N/A";
 };
 
 const Table = ({ products, onViewClick, onSort, sortStatus }) => {
     const getSortIndicator = (key) => {
         if (sortStatus.key === key) {
-            if (sortStatus.direction === 'asc') return ' ↑';
-            if (sortStatus.direction === 'desc') return ' ↓';
+            if (sortStatus.direction === "asc") return " ↑";
+            if (sortStatus.direction === "desc") return " ↓";
         }
         return null;
     };
@@ -19,33 +19,33 @@ const Table = ({ products, onViewClick, onSort, sortStatus }) => {
             <thead className="text-xs text-gray-700 uppercase bg-gray-200">
                 <tr>
                     <th scope="col" className="px-6 py-3">
-                        <button onClick={() => onSort('item_code.name')}>
-                            Name {getSortIndicator('item_code.name')}
+                        <button onClick={() => onSort("items.name")}>
+                            Name {getSortIndicator("items.name")}
                         </button>
                     </th>
                     <th scope="col" className="px-6 py-3">
-                        <button onClick={() => onSort('amount')}>
-                            Amount {getSortIndicator('amount')}
+                        <button onClick={() => onSort("stock.amount")}>
+                            Amount {getSortIndicator("stock.amount")}
                         </button>
                     </th>
                     <th scope="col" className="px-6 py-3">
-                        <button onClick={() => onSort('import_datetime')}>
-                            Import Time {getSortIndicator('import_datetime')}
+                        <button onClick={() => onSort("stock.import_datetime")}>
+                            Import Time {getSortIndicator("stock.import_datetime")}
                         </button>
                     </th>
                     <th scope="col" className="px-6 py-3">
-                        <button onClick={() => onSort('exp_datetime')}>
-                            Exp Time {getSortIndicator('exp_datetime')}
+                        <button onClick={() => onSort("stock.exp_datetime")}>
+                            Exp Time {getSortIndicator("stock.exp_datetime")}
                         </button>
                     </th>
                     <th scope="col" className="px-6 py-3">
-                        <button onClick={() => onSort('lot')}>
-                            Lot {getSortIndicator('lot')}
+                        <button onClick={() => onSort("stock.lot")}>
+                            Lot {getSortIndicator("stock.lot")}
                         </button>
                     </th>
                     <th scope="col" className="px-6 py-3">
-                        <button onClick={() => onSort('note')}>
-                            Note {getSortIndicator('note')}
+                        <button onClick={() => onSort("stock.note")}>
+                            Note {getSortIndicator("stock.note")}
                         </button>
                     </th>
                 </tr>
@@ -53,11 +53,15 @@ const Table = ({ products, onViewClick, onSort, sortStatus }) => {
             <tbody>
                 {products.map((product, index) => (
                     <tr key={index} className="bg-white">
-                        <td className="px-6 py-4">{product.item_code.name}</td>
-                        <td className="px-6 py-4">{product.amount}</td>
-                        <td className="px-6 py-4">{formatDate(product.import_datetime, 'yyyy-MM-dd')}</td>
-                        <td className="px-6 py-4">{formatDate(product.exp_datetime, 'HH:mm:ss')}</td>
-                        <td className="px-6 py-4">{product.lot}</td>
+                        <td className="px-6 py-4">{product.items.name}</td>
+                        <td className="px-6 py-4">{product.stock.amount}</td>
+                        <td className="px-6 py-4">
+                            {formatDate(product.stock.import_datetime, "yyyy-MM-dd")}
+                        </td>
+                        <td className="px-6 py-4">
+                            {formatDate(product.stock.exp_datetime, "HH:mm:ss")}
+                        </td>
+                        <td className="px-6 py-4">{product.stock.lot}</td>
                         <td className="flex items-center h-full px-6 py-4 justify-center">
                             <button
                                 onClick={() => onViewClick(product)}

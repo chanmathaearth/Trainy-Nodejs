@@ -12,9 +12,6 @@ mongoose.connect('mongodb+srv://firmer:FirmerPa55w0rd@firmer-test.ym0ch.mongodb.
   .then(() => console.log('Connection successful'))
   .catch(err => console.error(err));
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-
 var app = express();
 
 // view engine setup
@@ -31,10 +28,8 @@ app.use(cors({
   origin: 'http://localhost:5173'
 }));
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
-app.use('/stocks', stocks);
-app.use('/items', items);
+app.use(require('./routes/items'));
+app.use(require('./routes/stocks')); 
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

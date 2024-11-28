@@ -16,11 +16,10 @@ const ProductTable = () => {
 
     // Fetch stocks
     useEffect(() => {
-        axios.get('http://localhost:3000/stocks')
+        axios.get('http://localhost:3000/stocksv2')
             .then((response) => {
                 setProducts(response.data);
                 setFilteredProducts(response.data);
-                console.log('Product fected', response.data)
             })
             .catch((error) => console.error('Error fetching data:', error));
     }, []);
@@ -44,21 +43,15 @@ const ProductTable = () => {
         setSelectedProduct(null);
     };
 
-    const handleFilter = (filterData) => {
-        const { name, importTime, expTime, lot } = filterData;
-
-        const filtered = products.filter((products) => {
-            const matchesName = name ? products.item_code.name.includes(name) : true;
-            const matchesImportTime = importTime
-                ? format(new Date(products.import_datetime), "yyyy-MM-dd HH:mm") === format(new Date(importTime), "yyyy-MM-dd HH:mm")
-                : true;
-            const matchesExpTime = expTime
-                ? format(new Date(products.exp_datetime), "yyyy-MM-dd HH:mm") === format(new Date(expTime), "yyyy-MM-dd HH:mm")
-                : new Date(products.exp_datetime) > new Date();
-            const matchesLot = lot ? products.lot.includes(lot)  : true;
-            return matchesName && matchesImportTime && matchesExpTime && matchesLot;
-        });
-        setFilteredProducts(filtered);
+    const handleFilter = async (filterData) => {
+        try {
+            console.log(filterData)
+            const response = await axios.post("http://localhost:3000/stocks/filter", filterData);
+            console.log(response.data);
+            setFilteredProducts(response.data);
+        } catch (error) {
+            console.error("Error fetching filtered data:", error.response || error);
+        }
     };
 
     const sortedProducts = orderBy(
@@ -71,8 +64,6 @@ const ProductTable = () => {
         let direction;
         if (sortConfig.key === key) {
             direction = sortConfig.direction === 'none' ? 'asc' : sortConfig.direction === 'asc' ? 'desc' : 'none';
-        } else {
-            direction = 'asc';
         }
         setSortConfig({ key, direction });
     };
