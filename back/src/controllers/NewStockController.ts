@@ -8,32 +8,26 @@ export const getStocks = async (
     next: NextFunction
 ): Promise<void> => {
     try {
-        const stocks: IStock[] = await Stock.find().lean<IStock[]>();
+        const stocks = await Stock.find().lean<IStock[]>();
+        const item_id = stocks.map((stock) => stock.item_code);
+        const items = await Item.find({ _id: { $in: item_id } }).select("name").lean<IItem[]>();
 
-        const populatedStocks = (
-            await Promise.all(
-                stocks.map(async (stock) => {
-                    if (!stock.item_code) return null;
-                    const itemDetails: IItem | null = await Item.findById(
-                        stock.item_code
-                    ).lean<IItem>();
-                    if (!itemDetails) return null;
+        const itemMap = new Map(items.map((item) => [item._id.toString(), item.name]));
 
-                    return {
-                        stock: {
-                            lot: stock.lot,
-                            amount: stock.amount,
-                            import_datetime: stock.import_datetime,
-                            exp_datetime: stock.exp_datetime,
-                            note: stock.note,
-                        },
-                        items: {
-                            name: itemDetails.name,
-                        },
-                    };
-                })
-            )
-        ).filter(Boolean);
+        const populatedStocks = stocks
+            .map((stock) => ({
+                stock: {
+                    lot: stock.lot,
+                    amount: stock.amount,
+                    import_datetime: stock.import_datetime,
+                    exp_datetime: stock.exp_datetime,
+                    note: stock.note,
+                },
+                items: {
+                    name: itemMap.get(stock.item_code.toString()),
+                },
+            }))
+            .filter((entry) => entry.items.name);
 
         res.json(populatedStocks);
     } catch (err) {
@@ -41,7 +35,6 @@ export const getStocks = async (
     }
 };
 
-// Filter stocks
 export const filterStocks = async (
     req: Request,
     res: Response,
@@ -49,13 +42,14 @@ export const filterStocks = async (
 ): Promise<void> => {
     try {
         const { name, lot, import_datetime, exp_datetime } = req.body;
+        const items = name
+            ? await Item.find({ name: { $regex: name, $options: "i" } })
+                  .select("_id name")
+                  .lean<IItem[]>()
+            : await Item.find().select("_id name").lean<IItem[]>();
 
-        const item_code_id: string[] = name
-            ? (await Item.find({ name }).select("_id").lean()).map((item) =>
-                  item._id.toString()
-              )
-            : [];
-
+        const itemMap = new Map(items.map((item) => [item._id.toString(), item]));
+        const item_id = Array.from(itemMap.keys());
         const stockFilter: Partial<Record<keyof IStock, any>> = {
             ...(lot && { lot: Number(lot) }),
             ...(import_datetime && {
@@ -81,36 +75,29 @@ export const filterStocks = async (
                 : {
                       exp_datetime: { $gte: new Date() },
                   }),
-            ...(name && { item_code: { $in: item_code_id } }),
+            ...(name && { item_code: { $in: item_id } }),
         };
 
         const stocks: IStock[] = await Stock.find(stockFilter).lean<IStock[]>();
+        const result = stocks
+            .map((stock) => {
+                const item = itemMap.get(stock.item_code.toString());
+                if (!item) return null;
 
-        const result = (
-            await Promise.all(
-                stocks.map(async (stock) => {
-                    const item: IItem | null = await Item.findById(
-                        stock.item_code
-                    )
-                        .select("name")
-                        .lean<IItem>();
-                    return item
-                        ? {
-                              stock: {
-                                  lot: stock.lot,
-                                  amount: stock.amount,
-                                  import_datetime: stock.import_datetime,
-                                  exp_datetime: stock.exp_datetime,
-                                  note: stock.note,
-                              },
-                              items: {
-                                  name: item.name,
-                              },
-                          }
-                        : null;
-                })
-            )
-        ).filter(Boolean);
+                return {
+                    stock: {
+                        lot: stock.lot,
+                        amount: stock.amount,
+                        import_datetime: stock.import_datetime,
+                        exp_datetime: stock.exp_datetime,
+                        note: stock.note,
+                    },
+                    items: {
+                        name: item.name,
+                    },
+                };
+            })
+            .filter(Boolean);
 
         res.json(result);
     } catch (err) {

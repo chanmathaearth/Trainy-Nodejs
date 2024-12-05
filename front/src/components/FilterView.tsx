@@ -4,11 +4,11 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { MobileDateTimePicker } from "@mui/x-date-pickers/MobileDateTimePicker";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import TextField from "@mui/material/TextField";
+import Autocomplete from "@mui/material/Autocomplete";
 import dayjs, { Dayjs } from "dayjs";
 
 interface Item {
     name: string;
-    value?: string | number;
 }
 
 interface FilterProps {
@@ -51,6 +51,7 @@ const Filter: React.FC<FilterProps> = ({ items, onFilter }) => {
         <div className="w-full">
             <div className="bg-white p-4 shadow-sm">
                 <div className="mt-8 flex justify-center space-x-4">
+                    {/* Autocomplete Component */}
                     <div className="w-80 flex flex-col">
                         <label
                             htmlFor="name"
@@ -58,24 +59,28 @@ const Filter: React.FC<FilterProps> = ({ items, onFilter }) => {
                         >
                             Name
                         </label>
-                        <select
-                            id="name"
-                            className="appearance-none mt-2 block w-full rounded-md border border-gray-300 px-2 py-2 shadow-sm focus:outline-none"
+                        <Autocomplete
+                            className="mt-2"
+                            freeSolo
+                            options={items.map((item) => item.name)} 
                             value={selectedName}
-                            onChange={(e) => setSelectedName(e.target.value)}
-                        >
-                            <option value="">กรุณาเลือก</option>
-                            {items.map((item, index) => (
-                                <option
-                                    key={index}
-                                    value={item.value || item.name}
-                                >
-                                    {item.name}
-                                </option>
-                            ))}
-                        </select>
+                            onInputChange={(event, value) => setSelectedName(value || "")}
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    InputProps={{
+                                        ...params.InputProps,
+                                        style: { height: '42px', borderRadius: '8px'}, // กำหนดความสูงและ padding
+                                    }}
+                                    className="mt-2 block w-full rounded-xl border border-gray-300 shadow-sm focus:outline-none"
+                                    placeholder="Enter Name of Product"
+                                    variant="outlined"
+                                />
+                            )}
+                        />
                     </div>
 
+                    {/* Import Time Picker */}
                     <ThemeProvider theme={theme}>
                         <div className="w-80 flex flex-col">
                             <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -96,6 +101,7 @@ const Filter: React.FC<FilterProps> = ({ items, onFilter }) => {
                         </div>
                     </ThemeProvider>
 
+                    {/* Expired Time Picker */}
                     <ThemeProvider theme={theme}>
                         <div className="w-80 flex flex-col">
                             <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -116,6 +122,7 @@ const Filter: React.FC<FilterProps> = ({ items, onFilter }) => {
                         </div>
                     </ThemeProvider>
 
+                    {/* Lot Input */}
                     <div className="w-80 flex flex-col">
                         <label
                             htmlFor="lot"
@@ -138,6 +145,7 @@ const Filter: React.FC<FilterProps> = ({ items, onFilter }) => {
                         />
                     </div>
 
+                    {/* Apply Filter Button */}
                     <button
                         className="mt-3 text-black rounded-md py-2"
                         onClick={handleApplyFilter}
