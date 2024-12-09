@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import Stock, { IStock } from "../models/stock.model";
 import Item, { IItem } from "../models/item.model";
+import { addMinutes, startOfMinute } from "date-fns";
 
 export const getStocks = async (
     req: Request,
@@ -50,30 +51,24 @@ export const filterStocks = async (
 
         const itemMap = new Map(items.map((item) => [item._id.toString(), item]));
         const item_id = Array.from(itemMap.keys());
+        // Dayjs
         const stockFilter: Partial<Record<keyof IStock, any>> = {
             ...(lot && { lot: Number(lot) }),
             ...(import_datetime && {
                 import_datetime: {
-                    $gte: new Date(new Date(import_datetime).setSeconds(0, 0)),
-                    $lt: new Date(
-                        new Date(import_datetime).setSeconds(0, 0) + 60 * 1000
-                    ),
+                    $gte: startOfMinute(new Date(import_datetime)), // เริ่มต้นนาที
+                    $lt: addMinutes(startOfMinute(new Date(import_datetime)), 1), // สิ้นสุดนาที
                 },
             }),
             ...(exp_datetime
                 ? {
                       exp_datetime: {
-                          $gte: new Date(
-                              new Date(exp_datetime).setSeconds(0, 0)
-                          ),
-                          $lt: new Date(
-                              new Date(exp_datetime).setSeconds(0, 0) +
-                                  60 * 1000
-                          ),
+                          $gte: startOfMinute(new Date(exp_datetime)), // เริ่มต้นนาที
+                          $lt: addMinutes(startOfMinute(new Date(exp_datetime)), 1), // สิ้นสุดนาที
                       },
                   }
                 : {
-                      exp_datetime: { $gte: new Date() },
+                      exp_datetime: { $gte: new Date() }, // ค่า default หาก exp_datetime ไม่ได้ถูกระบุ
                   }),
             ...(name && { item_code: { $in: item_id } }),
         };
